@@ -9,9 +9,9 @@ pytest = "*"
 pre-commit = "*"
 repo-link = {editable = true,path = "."}
 pytest-cov = "*"
+mypy = "*"
 
 [packages]
-gitpython = "*"
 
 [requires]
 python_version = "3.7"
