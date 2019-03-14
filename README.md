@@ -4,8 +4,15 @@
 Open github links inside your favorite editor
 
 Automatically runs `clone`, `checkout`, and opens the correct line for you!
-
+## Installation
+Install by running
+```sh
+pip install repo_link
+```
 ## Usage:
+```sh
+    repo_link https://github.com/Tadaboody/repo_link/blob/master/repo_link/repo_link.py#L24
+```
 ```sh
 usage: repo_link [-h] [--parents PARENTS [PARENTS ...]] [--editor EDITOR]
                  [--config CONFIG]

@@ -48,9 +48,7 @@ def clone(repo_link: str):
     Repo().git.clone(repo_link.strip("/"))
 
 
-def open_in_editor(
-    path: PathType, line: Optional[str] = None, editor: str = os.environ["EDITOR"]
-):
+def open_in_editor(path: PathType, editor: str, line: Optional[str] = None):
     """Opens the file given in path and line, inside the editor"""
     if line:
         command = {
@@ -77,7 +75,7 @@ PARENT_DIRS = [Path.home(), Path.home() / "Forks"]
 def open_file(repo: PathType, file: str, commit: str, line: Optional[str], editor: str):
     with cd(repo):
         checkout(commit)
-        open_in_editor(file, line, editor=editor)
+        open_in_editor(path=file, line=line, editor=editor)
 
 
 def open_link(link: str, editor: str, parents: Sequence[Path]):
