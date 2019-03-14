@@ -1,4 +1,6 @@
 # Repo Link
+[![Build Status](https://travis-ci.com/Tadaboody/repo_link.svg?branch=master)](https://travis-ci.com/Tadaboody/repo_link) !
+---
 Open github links inside your favorite editor
 
 Automatically runs `clone`, `checkout`, and opens the correct line for you!
