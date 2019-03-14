@@ -12,6 +12,7 @@ pytest-cov = "*"
 mypy = "*"
 
 [packages]
+gitpython = "*"
 
 [requires]
 python_version = "3.7"
