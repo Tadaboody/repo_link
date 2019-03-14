@@ -3,13 +3,10 @@ python:
   - "3.6"
 install:
 - pip install pipenv
-- pip install codecov
 - pipenv install --dev
 # command to run tests
 script: 
-- pipenv run pytest --cov=./repo_link
-after_success:
-  - codecov
+- pipenv run pytest 
 
 deploy:
   provider: pypi
