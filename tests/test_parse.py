@@ -1,23 +1,31 @@
 import pytest
 from pathlib import Path
-from repo_link import parse
+from repo_link import parse, RepoData
 
 
 @pytest.mark.parametrize(
-    ["link", "path", "commit", "line"],
+    ["link", "data"],
     [
         (
             "https://github.com/erikrose/more-itertools/blob/master/more_itertools/recipes.py#L74",
-            Path("more-itertools/more_itertools/recipes.py"),
-            "master",
-            "74",
+            RepoData(
+                path="more_itertools/recipes.py",
+                repository="more-itertools",
+                user="erikrose",
+                commit="master",
+                line="74",
+            ),
         ),
         # No lineno
         (
             "https://github.com/thepracticaldev/dev.to/blob/master/.gitdocs.js",
-            Path("dev.to/.gitdocs.js"),
-            "master",
-            None,
+            RepoData(
+                path=".gitdocs.js",
+                user="thepracticaldev",
+                repository="dev.to",
+                commit="master",
+                line=None,
+            ),
         ),
         # # Branch name with slash
         # ("https://github.com/thepracticaldev/dev.to/blob/ben/fix-js-for-comment-creation/.gitdocs.js",
@@ -26,5 +34,5 @@ from repo_link import parse
         # None)
     ],
 )
-def test_parse(link, path, commit, line):
-    assert parse(link) == (path, commit, line)
+def test_parse(link, data):
+    assert parse(link) == data
