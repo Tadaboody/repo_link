@@ -1,9 +1,10 @@
 import os
+import json
 import subprocess
 import re
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Iterator, Optional, Union, NamedTuple
+from typing import Iterator, Optional, Union, NamedTuple, Sequence
 from git import Repo, GitCommandError, Commit
 
 
@@ -43,16 +44,22 @@ def checkout(commit: str):
 
 def clone(repo_link: str):
     """Clones the given repo in parent_dir. Raises FileAlreadyExists if the repo exists"""
+    print(f"Repository does not exist, cloning into {Path.cwd()}")
     Repo().git.clone(repo_link.strip("/"))
 
 
-def open_in_editor(path: PathType, line: str = "0", editor: str = os.environ["EDITOR"]):
+def open_in_editor(
+    path: PathType, line: Optional[str] = None, editor: str = os.environ["EDITOR"]
+):
     """Opens the file given in path and line, inside the editor"""
-    command = {
-        "vim": f"{editor} +{line} {path}",
-        "code": f"{editor} -g {path}:{line}",
-        "pycharm": f"{editor} {path}:{line}",
-    }[editor]
+    if line:
+        command = {
+            "vim": f"{editor} +{line} {path}",
+            "code": f"{editor} -g {path}:{line}",
+            "pycharm": f"{editor} {path}:{line}",
+        }[editor]
+    else:
+        command = f"{editor} {path}"
     subprocess.run(command.split())
 
 
@@ -67,31 +74,70 @@ def cd(path: PathType) -> Iterator[None]:
 PARENT_DIRS = [Path.home(), Path.home() / "Forks"]
 
 
-def open_link(repo: Path, file: str, commit: str, line: str):
+def open_file(repo: PathType, file: str, commit: str, line: Optional[str], editor: str):
     with cd(repo):
         checkout(commit)
-        open_in_editor(file, line)
+        open_in_editor(file, line, editor=editor)
 
 
-def main():
-    link = "https://github.com/erikrose/more-itertools/blob/master/more_itertools/recipes.py#L74"
+def open_link(link: str, editor: str, parents: Sequence[Path]):
     data = parse(link)
-    existing_repos = {
-        repo: path for path in PARENT_DIRS for repo in path.iterdir() if repo.is_dir()
-    }
-    for parent in (
-        parent for parent in PARENT_DIRS if (parent / data.repository).exists()
-    ):
-        open_link(
+    for parent in (parent for parent in parents if (parent / data.repository).exists()):
+        open_file(
             repo=parent / data.repository,
             file=data.path,
             commit=data.commit,
             line=data.line,
+            editor=editor,
         )
         return
-    with cd(PARENT_DIRS[0]):
+    with cd(parents[0]):
         clone(link.partition("/blob")[0])
-        open_link(data.repository, data.commit, data.line, file=data.path)
+        open_file(
+            repo=data.repository,
+            commit=data.commit,
+            line=data.line,
+            file=data.path,
+            editor=editor,
+        )
+
+
+def main():
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Open github link in editor")
+    parser.add_argument(dest="link", type=str, help="The opened link")
+    parser.add_argument(
+        "--parents",
+        type=str,
+        nargs="+",
+        help="Directories where the repository will be searched. if not found it will be cloned into the first one",
+    )
+    parser.add_argument(
+        "--editor",
+        dest="editor",
+        default=None,
+        help="The editor opened (default: EDITOR)",
+    )
+    parser.add_argument(
+        "--config",
+        help="A json file where command line options can be hard-coded, default:~/.repo_link_config.json",
+        default="~/.repo_link_config.json",
+        dest="config",
+    )
+    args = parser.parse_args()
+    config_path = Path(args.config).expanduser()
+    if config_path.exists():
+        with open(config_path) as fp:
+            config = json.load(fp)
+        config["parents"] = [Path(parent).expanduser() for parent in config["parents"]]
+        open_link(link=args.link, **config)
+        return
+    open_link(
+        args.link,
+        editor=args.editor or os.environ["EDITOR"],
+        parents=[Path(parent) for parent in args.parents or []] or PARENT_DIRS,
+    )
 
 
 if __name__ == "__main__":
