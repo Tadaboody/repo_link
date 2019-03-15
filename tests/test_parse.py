@@ -27,11 +27,17 @@ from repo_link import parse, RepoData
                 line=None,
             ),
         ),
-        # # Branch name with slash
-        # ("https://github.com/thepracticaldev/dev.to/blob/ben/fix-js-for-comment-creation/.gitdocs.js",
-        # Path("dev.to/.gitdocs.js"),
-        # "ben/fix-js-for-comment-creation",
-        # None)
+        # Branch name with slash
+        (
+            "https://github.com/thepracticaldev/dev.to/blob/ben/fix-js-for-comment-creation/.gitdocs.js",
+            RepoData(
+                path="dev.to/.gitdocs.js",
+                user="thepracticaldev",
+                commit="ben/fix-js-for-comment-creation",
+                repository="dev.to",
+                line=None,
+            ),
+        ),
     ],
 )
 def test_parse(link, data):
