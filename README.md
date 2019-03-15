@@ -1,9 +1,10 @@
 # Repo Link
-[![Build Status](https://travis-ci.com/Tadaboody/repo_link.svg?branch=master)](https://travis-ci.com/Tadaboody/repo_link) !
+[![Build Status](https://travis-ci.com/Tadaboody/repo_link.svg?branch=master)](https://travis-ci.com/Tadaboody/repo_link) 
 ---
 Open github links inside your favorite editor
 
 Automatically runs `clone`, `checkout`, and opens the correct line for you!
+[![asciicast](https://asciinema.org/a/qfPFhOdyWGsFK670zd8eIuwBK.svg)](https://asciinema.org/a/qfPFhOdyWGsFK670zd8eIuwBK)
 ## Installation
 Install by running
 ```sh
