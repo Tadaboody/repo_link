@@ -39,3 +39,15 @@ A config json can be given, it will look like this
     "parents":["~/Forks","~"]
 }
 ```
+
+## Development
+We use [pipenv](https://pipenv.readthedocs.io/en/latest/) for development. simply run
+```sh
+pip install pipenv
+pipenv install --dev
+```
+do install the dependencies.
+Tests are run with `pytest` by running
+```sh
+pipenv run pytest
+```
