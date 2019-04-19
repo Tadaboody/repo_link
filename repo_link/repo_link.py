@@ -2,10 +2,11 @@ import os
 import json
 import subprocess
 import re
+import argparse
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Iterator, Optional, Union, NamedTuple, Sequence
-from git import Repo, GitCommandError, Commit
+from git import Repo, GitCommandError
 
 
 PathType = Union[os.PathLike, str]
@@ -101,7 +102,23 @@ def open_link(link: str, editor: str, parents: Sequence[Path]):
 
 
 def main():
-    import argparse
+    args = parse_args()
+    config_path = Path(args.config).expanduser()
+    if config_path.exists():
+        with open(config_path) as fp:
+            config = json.load(fp)
+        config["parents"] = [Path(parent).expanduser() for parent in config["parents"]]
+        open_link(link=args.link, **config)
+        return
+    open_link(
+        args.link,
+        editor=args.editor or os.environ["EDITOR"],
+        parents=[Path(parent) for parent in args.parents or []] or PARENT_DIRS,
+    )
+
+
+def parse_args() -> argparse.Namespace:
+    """Parse command line arguments, will exit if user asked for help"""
 
     parser = argparse.ArgumentParser(description="Open github link in editor")
     parser.add_argument(dest="link", type=str, help="The opened link")
@@ -124,18 +141,7 @@ def main():
         dest="config",
     )
     args = parser.parse_args()
-    config_path = Path(args.config).expanduser()
-    if config_path.exists():
-        with open(config_path) as fp:
-            config = json.load(fp)
-        config["parents"] = [Path(parent).expanduser() for parent in config["parents"]]
-        open_link(link=args.link, **config)
-        return
-    open_link(
-        args.link,
-        editor=args.editor or os.environ["EDITOR"],
-        parents=[Path(parent) for parent in args.parents or []] or PARENT_DIRS,
-    )
+    return args
 
 
 if __name__ == "__main__":
