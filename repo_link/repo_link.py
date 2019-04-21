@@ -43,10 +43,10 @@ def checkout(commit: str):
     repo.git.checkout(commit)
 
 
-def clone(repo_link: str):
+def clone(repo_link: str, target_path: Path) -> Repo:
     """Clones the given repo in parent_dir. Raises FileAlreadyExists if the repo exists"""
-    print(f"Repository does not exist, cloning into {Path.cwd()}")
-    Repo().git.clone(repo_link.strip("/"))
+    print(f"Repository does not exist, cloning into {target_path}")
+    return Repo.clone_from(repo_link.strip("/"), str(target_path))
 
 
 def open_in_editor(path: PathType, editor: str, line: Optional[str] = None):
@@ -90,15 +90,14 @@ def open_link(link: str, editor: str, parents: Sequence[Path]):
             editor=editor,
         )
         return
-    with cd(parents[0]):
-        clone(link.partition("/blob")[0])
-        open_file(
-            repo=data.repository,
-            commit=data.commit,
-            line=data.line,
-            file=data.path,
-            editor=editor,
-        )
+    repo = clone(link.partition("/blob")[0], parents[0] / data.repository)
+    open_file(
+        repo=repo.working_dir,
+        commit=data.commit,
+        line=data.line,
+        file=data.path,
+        editor=editor,
+    )
 
 
 def main():
