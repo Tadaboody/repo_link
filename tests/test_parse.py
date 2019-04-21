@@ -14,6 +14,7 @@ from repo_link import parse, RepoData
                 user="erikrose",
                 commit="master",
                 line="74",
+                base_link="https://github.com",
             ),
         ),
         # No lineno
@@ -24,6 +25,7 @@ from repo_link import parse, RepoData
                 user="thepracticaldev",
                 repository="dev.to",
                 commit="master",
+                base_link="https://github.com",
                 line=None,
             ),
         ),
