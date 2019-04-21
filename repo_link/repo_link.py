@@ -3,14 +3,14 @@ import json
 import subprocess
 import re
 import argparse
-from urllib.parse import urljoin
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Iterator, Optional, Union, NamedTuple, Sequence
-from git import Repo, GitCommandError
+from typing import Iterator, Optional, Union, NamedTuple, Sequence, TypeVar, Callable
+from git import Repo
 
 
 PathType = Union[os.PathLike, str]
+T = TypeVar("T")
 
 
 class RepoData(NamedTuple):
@@ -85,18 +85,28 @@ def open_file(repo: PathType, file: str, commit: str, line: Optional[str], edito
         open_in_editor(path=file, line=line, editor=editor)
 
 
+def find_in_sequence(
+    sequence: Sequence[T], predicate: Callable[[T], bool]
+) -> Optional[T]:
+    """Returns the element that satisfies the predicate, if exists"""
+    return next((element for element in sequence if predicate(element)), None)
+
+
+def find_repo(parents: Sequence[Path], data: RepoData) -> Optional[Repo]:
+    """Returns a Repo object that fits the given RepoData in one of the parent directories, if found"""
+    parent = find_in_sequence(
+        parents, lambda parent: (parent / data.repository).exists()
+    )
+    if parent:
+        return Repo(parent / data.repository)
+    return None
+
+
 def open_link(link: str, editor: str, parents: Sequence[Path]):
     data = parse(link)
-    for parent in (parent for parent in parents if (parent / data.repository).exists()):
-        open_file(
-            repo=parent / data.repository,
-            file=data.path,
-            commit=data.commit,
-            line=data.line,
-            editor=editor,
-        )
-        return
-    repo = clone(data.clone_link(), parents[0] / data.repository)
+    repo = find_repo(parents, data) or clone(
+        data.clone_link(), parents[0] / data.repository
+    )
     open_file(
         repo=repo.working_dir,
         commit=data.commit,
