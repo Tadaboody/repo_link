@@ -3,10 +3,9 @@ import json
 import subprocess
 import re
 import argparse
-from contextlib import contextmanager
 from pathlib import Path
-from typing import Iterator, Optional, Union, NamedTuple, Sequence, TypeVar, Callable
-from git import Repo
+from typing import Optional, Union, NamedTuple, Sequence, TypeVar, Callable
+from git import Repo  # type: ignore
 
 
 PathType = Union[os.PathLike, str]
@@ -37,9 +36,8 @@ def parse(link: str) -> RepoData:
     raise ValueError("Invalid link")
 
 
-def checkout(commit: str):
+def checkout(repo: Repo, commit: str):
     """Checks out the given github pathspec (commit/branch) in the local repository"""
-    repo = Repo(".")
     if repo.head.commit == repo.commit(commit):
         return
     if repo.is_dirty():
@@ -68,21 +66,12 @@ def open_in_editor(path: PathType, editor: str, line: Optional[str] = None):
     subprocess.run(command.split())
 
 
-@contextmanager
-def cd(path: PathType) -> Iterator[None]:
-    old_path = Path.cwd()
-    os.chdir(path)
-    yield
-    os.chdir(old_path)
-
-
 PARENT_DIRS = [Path.home(), Path.home() / "Forks"]
 
 
-def open_file(repo: PathType, file: str, commit: str, line: Optional[str], editor: str):
-    with cd(repo):
-        checkout(commit)
-        open_in_editor(path=file, line=line, editor=editor)
+def open_file(repo: Repo, file: str, commit: str, line: Optional[str], editor: str):
+    checkout(repo, commit)
+    open_in_editor(path=Path(repo.working_dir) / file, line=line, editor=editor)
 
 
 def find_in_sequence(
@@ -108,11 +97,7 @@ def open_link(link: str, editor: str, parents: Sequence[Path]):
         data.clone_link(), parents[0] / data.repository
     )
     open_file(
-        repo=repo.working_dir,
-        commit=data.commit,
-        line=data.line,
-        file=data.path,
-        editor=editor,
+        repo=repo, commit=data.commit, line=data.line, file=data.path, editor=editor
     )
 
 
