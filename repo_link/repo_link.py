@@ -69,9 +69,12 @@ def open_in_editor(path: PathType, editor: str, line: Optional[str] = None):
 PARENT_DIRS = [Path.home(), Path.home() / "Forks"]
 
 
-def open_file(repo: Repo, file: str, commit: str, line: Optional[str], editor: str):
-    checkout(repo, commit)
-    open_in_editor(path=Path(repo.working_dir) / file, line=line, editor=editor)
+def open_file(repo: Repo, data: RepoData, editor: str):
+    """Opens file corresponding to the given description in the given git repo"""
+    checkout(repo, data.commit)
+    open_in_editor(
+        path=Path(repo.working_dir) / data.path, line=data.line, editor=editor
+    )
 
 
 def find_in_sequence(
@@ -96,9 +99,7 @@ def open_link(link: str, editor: str, parents: Sequence[Path]):
     repo = find_repo(parents, data) or clone(
         data.clone_link(), parents[0] / data.repository
     )
-    open_file(
-        repo=repo, commit=data.commit, line=data.line, file=data.path, editor=editor
-    )
+    open_file(repo=repo, data=data, editor=editor)
 
 
 def main():
