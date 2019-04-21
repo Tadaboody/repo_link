@@ -3,6 +3,7 @@ import json
 import subprocess
 import re
 import argparse
+from urllib.parse import urljoin
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Iterator, Optional, Union, NamedTuple, Sequence
@@ -17,13 +18,18 @@ class RepoData(NamedTuple):
     repository: str
     path: str
     commit: str
+    base_link: str
     line: Optional[str]
+
+    def clone_link(self):
+        """A URL that allows to clone the repository from"""
+        return f"{self.base_link}/{self.user}/{self.repository}"
 
 
 def parse(link: str) -> RepoData:
     """Given a github link returns the File path, git commit, line and collumn the link refers to"""
     # https://regex101.com/r/jBJ7PI/4
-    link_pattern = r"https://github\.com/(?P<user>.+)/(?P<repository>[^/]+)/blob/(?P<commit>[^/]+)/(?P<path>[^#]+)(?:#L(?P<line>\d+))?"
+    link_pattern = r"(?P<base_link>https://github\.com)/(?P<user>.+)/(?P<repository>[^/]+)/blob/(?P<commit>[^/]+)/(?P<path>[^#]+)(?:#L(?P<line>\d+))?"
     match = re.match(link_pattern, link)
     if match:
         groups = match.groups()
@@ -90,7 +96,7 @@ def open_link(link: str, editor: str, parents: Sequence[Path]):
             editor=editor,
         )
         return
-    repo = clone(link.partition("/blob")[0], parents[0] / data.repository)
+    repo = clone(data.clone_link(), parents[0] / data.repository)
     open_file(
         repo=repo.working_dir,
         commit=data.commit,
