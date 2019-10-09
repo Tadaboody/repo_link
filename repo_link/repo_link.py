@@ -6,6 +6,7 @@ import argparse
 from pathlib import Path
 from typing import Optional, Union, NamedTuple, Sequence, TypeVar, Callable
 from git import Repo  # type: ignore
+import gitdb
 
 
 PathType = Union[os.PathLike, str]
@@ -15,8 +16,7 @@ T = TypeVar("T")
 class RepoData(NamedTuple):
     user: str
     repository: str
-    path: str
-    commit: str
+    branch_and_path: str
     base_link: str
     line: Optional[str]
 
@@ -28,7 +28,7 @@ class RepoData(NamedTuple):
 def parse(link: str) -> RepoData:
     """Given a github link returns the File path, git commit, line and collumn the link refers to"""
     # https://regex101.com/r/jBJ7PI/4
-    link_pattern = r"(?P<base_link>https://github\.com)/(?P<user>.+)/(?P<repository>[^/]+)/blob/(?P<commit>[^/]+)/(?P<path>[^#]+)(?:#L(?P<line>\d+))?"
+    link_pattern = r"(?P<base_link>https://github\.com)/(?P<user>.+)/(?P<repository>[^/]+)/blob/(?P<branch_and_path>[^#]+)(?:#L(?P<line>\d+))?"
     match = re.match(link_pattern, link)
     if match:
         groups = match.groups()
@@ -36,15 +36,26 @@ def parse(link: str) -> RepoData:
     raise ValueError("Invalid link")
 
 
-def checkout(repo: Repo, commit: str):
+def checkout(repo: Repo, branch: str):
     """Checks out the given github pathspec (commit/branch) in the local repository"""
-    if repo.head.commit == repo.commit(commit):
-        return
+    idx = 1
+    branch_and_path = branch.split("/")
+    branch = branch_and_path[0]
+    while True:
+        try:
+            print(repo.commit("ben/fix-js-for-comment-creation"))
+            if repo.head.commit == repo.commit(branch):
+                return
+        except gitdb.exc.BadName:
+            branch += f"/{branch_and_path[idx]}"
+            idx += 1
+        else:
+            break
     if repo.is_dirty():
         print("Can't make checkout to linked commit, repository is dirty")
         print("Stashing...")
         repo.git.stash()
-    repo.git.checkout(commit)
+    repo.git.checkout(branch)
 
 
 def clone(repo_link: str, target_path: Path) -> Repo:
@@ -71,9 +82,11 @@ PARENT_DIRS = [Path.home(), Path.home() / "Forks"]
 
 def open_file(repo: Repo, data: RepoData, editor: str):
     """Opens file corresponding to the given description in the given git repo"""
-    checkout(repo, data.commit)
+    checkout(repo, data.branch_and_path)
     open_in_editor(
-        path=Path(repo.working_dir) / data.path, line=data.line, editor=editor
+        path=Path(repo.working_dir) / data.branch_and_path,
+        line=data.line,
+        editor=editor,
     )
 
 
